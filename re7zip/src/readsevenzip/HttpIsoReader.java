@@ -140,11 +140,6 @@ public class HttpIsoReader {
         String file = null;
         String target = null;
 
-        source = "http://msft-dnl.digitalrivercontent.net/msvista/pub/X15-65805/X15-65805.iso";
-        type = ArchiveFormat.UDF;
-        file = "boot\\fonts\\chs_boot.ttf";
-        target = "chs_boot.ttf";
-
         for (String arg : a) {
             if (arg.toLowerCase().startsWith("/x=")) {
                 try {
@@ -167,7 +162,7 @@ public class HttpIsoReader {
 
         }
 
-        if (file == null || source == null || target == null) {
+        if (type == null || source == null || file == null || target == null) {
             usage();
             return;
         }
