@@ -27,8 +27,41 @@ import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
 public class HttpIsoReader {
 
     private static void usage() {
-        System.out.println("Usage java - jar re7zip.jar [/x=FILE_TYPE] /s=URL /f=[FILE PATH IN ARCHIEVE] /t=[TARGET FILE PATH] ");
-        System.out.println("\tSupported file types are " + Arrays.toString(ArchiveFormat.values()));
+        String archive_types = "";
+        String archive_type = "";
+
+        System.out.println("\nUsage:    java -jar re7zip.jar [OPTIONS]\n");
+        System.out.println("Options:");
+        System.out.println("          /t  -t    archive filetype:");
+        
+        for (ArchiveFormat archive_format : ArchiveFormat.values()) {
+            archive_type = archive_format.toString().toLowerCase();
+            if (archive_types.length() == 0) {
+                archive_types = "                      " + archive_type;
+            } else if (archive_types.length() < 70) {
+                archive_types = archive_types + ", " + archive_type;
+            } else {
+                System.out.println(archive_types + ", " + archive_type + ",");
+                archive_types = "";
+            }
+        }
+        if (archive_types.length() != 0) {
+            System.out.println(archive_types);
+        }
+        
+        System.out.println("          /a  -a    archive filename or URL location of archive");
+        System.out.println("          /e  -e    filename to extract out of the archive");
+        System.out.println("          /o  -o    output filename for the extracted file\n");
+        System.out.println("Example:");
+        System.out.println("          java -jar re7zip.jar /t=iso\n"
+                         + "                               /a=http://test.com/test.iso\n"
+                         + "                               /e=some\\file.txt\n"
+                         + "                               /o=file.txt\n");
+        System.out.println("          java -jar re7zip.jar -t=iso\n"
+                         + "                               -a=http://test.com/test.iso\n"
+                         + "                               -e=some/file.txt\n"
+                         + "                               -o=file.txt\n");
+        
     }
     ISevenZipInArchive archive;
 
@@ -135,69 +168,102 @@ public class HttpIsoReader {
     }
 
     public static void main(String[] a) throws Exception {
-        String source = null;
-        ArchiveFormat type = null;
-        String file = null;
-        String target = null;
+        String archive_filename = null;
+        ArchiveFormat archive_type = null;
+        String extract_filename = null;
+        String output_filename = null;
 
         for (String arg : a) {
-            if (arg.toLowerCase().startsWith("/x=")) {
+            String arg_lower = arg.toLowerCase();
+            
+            if (arg_lower.startsWith("/t=") || arg_lower.startsWith("-t=")) {
                 try {
-                    type = ArchiveFormat.valueOf(arg.substring(3).toUpperCase());
+                    archive_type = ArchiveFormat.valueOf(arg.substring(3).toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    System.out.println("Invalid File Type : " + arg.substring(3).toUpperCase());
+                    System.out.println("\nInvalid File Type : " + arg.substring(3).toUpperCase() + "\n");
                     usage();
-                    return;
+                    System.exit(1);
                 }
             }
-            if (arg.toLowerCase().startsWith("/s=")) {
-                source = arg.substring(3);
+            if (arg_lower.startsWith("/a=") || arg_lower.startsWith("-a=")) {
+                archive_filename = arg.substring(3);
             }
-            if (arg.toLowerCase().startsWith("/f=")) {
-                file = arg.substring(3);
+            if (arg_lower.startsWith("/e=") || arg_lower.startsWith("-e=")) {
+                extract_filename = arg.substring(3);
             }
-            if (arg.toLowerCase().startsWith("/t=")) {
-                target = arg.substring(3);
+            if (arg_lower.startsWith("/o=") || arg_lower.startsWith("-o=")) {
+                output_filename = arg.substring(3);
             }
 
         }
 
-        if (type == null || source == null || file == null || target == null) {
+        if (archive_type == null || archive_filename == null || extract_filename == null || output_filename == null) {
             usage();
-            return;
+            System.exit(1);
         }
+        
+                        
         long start = System.currentTimeMillis();
 
         HttpIsoReader reader = new HttpIsoReader();
         Boolean result = false;
-        if (source.toLowerCase().startsWith("http://")) {
-            System.out.println("Openning HTTP Archive " + source);
-            result = reader.open(source, type);
+        if (archive_filename.toLowerCase().startsWith("http://")) {
+            System.out.println("Opening HTTP archive '" + archive_filename + "'.");
+            result = reader.open(archive_filename, archive_type);
         } else {
-            System.out.println("Openning FILE Archive " + source);
-            try{
-                result = reader.open(new File(source), type);
+            System.out.println("Opening FILE archive '" + archive_filename + "'.");
+            try {
+                result = reader.open(new File(archive_filename), archive_type);
             }
             catch(Exception e){
-                System.out.println("Invalid file "+source);
+                System.out.println("Invalid '" + archive_type + "'  file '" + archive_filename + "'.");
                 usage();
-                return;
+                System.exit(1);
             }
         }
         if(result){
-            System.out.println("Archive is open");
+            System.out.println("Archive '" + archive_filename + "' is open.");
         }
         else{
-            System.out.println("Failed to open archive ");
-            return;
+            System.out.println("Failed to open archive '" + archive_filename + "'.");
+            System.exit(1);
         }
         
-        System.out.println("Extracting file");
-        reader.getFile(file, target);
-        reader.close();
+        
+        if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
+            /**
+             * Replace all forward slashes with backward slashes when run from Windows.
+             * Also remove all slashes as the beginning.
+             */
+            extract_filename = extract_filename.replaceAll("/", "\\\\").replaceAll("^\\\\*", "");
+        } else {
+            /**
+             * Replace all backward slashes with forward slashes when run from other operating systems.
+             * Also remove all slashes as the beginning.
+             */
+            extract_filename = extract_filename.replaceAll("\\\\", "/").replaceAll("^/*", "");
+        }
+        
+        System.out.println("Extracting file '" + extract_filename + "' ...");
+        
+        try {
+            reader.getFile(extract_filename, output_filename);
+            reader.close();
+        }
+        catch(Exception e){
+                System.out.println("Filename '" + extract_filename + "' is not found in the archive.");
+                System.exit(1);
+        }
+        
         long end = System.currentTimeMillis();
         long time = (end - start) / 1000;
 
-        System.out.println("Done. Downloaded in " + (time / 60) + " minutes and " + (time % 60) + " seconds");
+        if (archive_filename.toLowerCase().startsWith("http://")) {
+            System.out.println("Done. Downloaded in " + (time / 60) + " minutes and " + (time % 60) + " seconds.");
+        } else {
+            System.out.println("Done. Processed in " + (time / 60) + " minutes and " + (time % 60) + " seconds.");
+        }
+        
+        System.exit(0);
     }
 }
