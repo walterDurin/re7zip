@@ -26,6 +26,11 @@ import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
  */
 public class HttpIsoReader {
 
+    private static void version() {
+        System.out.println("\nre7zip version: 0.1");
+        System.out.println("Website: http://code.google.com/p/re7zip/\n");
+    }
+    
     private static void usage() {
         String archive_types = "";
         String archive_type = "";
@@ -51,7 +56,8 @@ public class HttpIsoReader {
         
         System.out.println("          /a  -a    archive filename or URL location of archive");
         System.out.println("          /e  -e    filename to extract out of the archive");
-        System.out.println("          /o  -o    output filename for the extracted file\n");
+        System.out.println("          /o  -o    output filename for the extracted file");
+        System.out.println("          /v  -v    show version info\n");
         System.out.println("Example:");
         System.out.println("          java -jar re7zip.jar /t=iso\n"
                          + "                               /a=http://test.com/test.iso\n"
@@ -190,8 +196,10 @@ public class HttpIsoReader {
                 extract_filename = arg.substring(3);
             } else if (arg_lower.startsWith("/o=") || arg_lower.startsWith("-o=")) {
                 output_filename = arg.substring(3);
+            } else if (arg_lower.startsWith("/v") || arg_lower.startsWith("-v") || arg_lower.startsWith("--v")) {
+                version();
+                System.exit(0);
             }
-
         }
 
         if (archive_type == null || archive_filename == null || extract_filename == null || output_filename == null) {
