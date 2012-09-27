@@ -172,7 +172,7 @@ public class HttpIsoReader {
         ArchiveFormat archive_type = null;
         String extract_filename = null;
         String output_filename = null;
-
+        
         for (String arg : a) {
             String arg_lower = arg.toLowerCase();
             
@@ -184,14 +184,11 @@ public class HttpIsoReader {
                     usage();
                     System.exit(1);
                 }
-            }
-            if (arg_lower.startsWith("/a=") || arg_lower.startsWith("-a=")) {
+            } else if (arg_lower.startsWith("/a=") || arg_lower.startsWith("-a=")) {
                 archive_filename = arg.substring(3);
-            }
-            if (arg_lower.startsWith("/e=") || arg_lower.startsWith("-e=")) {
+            } else if (arg_lower.startsWith("/e=") || arg_lower.startsWith("-e=")) {
                 extract_filename = arg.substring(3);
-            }
-            if (arg_lower.startsWith("/o=") || arg_lower.startsWith("-o=")) {
+            } else if (arg_lower.startsWith("/o=") || arg_lower.startsWith("-o=")) {
                 output_filename = arg.substring(3);
             }
 
