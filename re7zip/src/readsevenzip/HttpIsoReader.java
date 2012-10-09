@@ -175,6 +175,7 @@ public class HttpIsoReader {
 
     public static void main(String[] a) throws Exception {
         String archive_filename = null;
+        String archive_type_arg = null;
         ArchiveFormat archive_type = null;
         String extract_filename = null;
         String output_filename = null;
@@ -183,10 +184,15 @@ public class HttpIsoReader {
             String arg_lower = arg.toLowerCase();
             
             if (arg_lower.startsWith("/t=") || arg_lower.startsWith("-t=")) {
+                archive_type_arg = arg.substring(3).toUpperCase();
+                if (archive_type_arg.equals("7Z")) {
+                    archive_type_arg = "SEVEN_ZIP";
+                }
+                
                 try {
-                    archive_type = ArchiveFormat.valueOf(arg.substring(3).toUpperCase());
+                    archive_type = ArchiveFormat.valueOf(archive_type_arg);
                 } catch (IllegalArgumentException e) {
-                    System.out.println("\nInvalid File Type : " + arg.substring(3).toUpperCase() + "\n");
+                    System.out.println("\nInvalid File Type : " + archive_type_arg + "\n");
                     usage();
                     System.exit(1);
                 }
