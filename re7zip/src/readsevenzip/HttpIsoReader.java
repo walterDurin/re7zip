@@ -8,15 +8,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import net.sf.sevenzipjbinding.ArchiveFormat;
-import net.sf.sevenzipjbinding.ExtractOperationResult;
-import net.sf.sevenzipjbinding.ISequentialOutStream;
-import net.sf.sevenzipjbinding.ISevenZipInArchive;
-import net.sf.sevenzipjbinding.SevenZip;
-import net.sf.sevenzipjbinding.SevenZipException;
+import net.sf.sevenzipjbinding.*;
 import net.sf.sevenzipjbinding.impl.RandomAccessFileInStream;
 import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
 
@@ -33,7 +27,7 @@ public class HttpIsoReader {
     
     private static void usage() {
         String archive_types = "";
-        String archive_type = "";
+        String archive_type;
 
         System.out.println("\nUsage:    java -jar re7zip.jar [OPTIONS]\n");
         System.out.println("Options:");
@@ -175,7 +169,7 @@ public class HttpIsoReader {
 
     public static void main(String[] a) throws Exception {
         String archive_filename = null;
-        String archive_type_arg = null;
+        String archive_type_arg;
         ArchiveFormat archive_type = null;
         String extract_filename = null;
         String output_filename = null;
