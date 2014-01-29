@@ -19,7 +19,8 @@ import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
  * @author wael
  */
 public class HttpIsoReader {
-
+    ISevenZipInArchive archive;
+    
     private static void version() {
         System.out.println("\nre7zip version: 0.1");
         System.out.println("Website: http://code.google.com/p/re7zip/\n");
@@ -50,6 +51,7 @@ public class HttpIsoReader {
         
         System.out.println("          /a  -a    archive filename or URL location of archive");
         System.out.println("          /e  -e    filename to extract out of the archive");
+        System.out.println("          /l  -l    list content of archive");
         System.out.println("          /o  -o    output filename for the extracted file");
         System.out.println("          /v  -v    show version info\n");
         System.out.println("Example:");
@@ -57,13 +59,17 @@ public class HttpIsoReader {
                          + "                               /a=http://test.com/test.iso\n"
                          + "                               /e=some\\file.txt\n"
                          + "                               /o=file.txt\n");
+        System.out.println("          java -jar re7zip.jar /t=iso\n"
+                         + "                               /a=http://test.com/test.iso\n"
+                         + "                               -l\n");
         System.out.println("          java -jar re7zip.jar -t=iso\n"
                          + "                               -a=http://test.com/test.iso\n"
                          + "                               -e=some/file.txt\n"
                          + "                               -o=file.txt\n");
-        
+        System.out.println("          java -jar re7zip.jar -t=iso\n"
+                         + "                               -a=http://test.com/test.iso\n"
+                         + "                               -l\n");
     }
-    ISevenZipInArchive archive;
 
     public Boolean open(String URL) {
         return open(URL, null);
@@ -149,6 +155,21 @@ public class HttpIsoReader {
         }
     }
 
+    public void listArchive() throws IOException, SevenZipException {
+        int itemCount = archive.getNumberOfItems();
+        System.out.println("\nNumber of items in archive: " + itemCount + "\n");
+
+        System.out.println("   Size   | Compr.Sz. | Filename");
+        System.out.println("----------+-----------+---------");
+
+        for (int i = 0; i < itemCount; i++) {
+            System.out.println(String.format("%9s | %9s | %s", // 
+                archive.getProperty(i, PropID.SIZE), 
+                archive.getProperty(i, PropID.PACKED_SIZE), 
+                archive.getProperty(i, PropID.PATH)));
+        }          
+    }
+
     public void close() {
         try {
             archive.close();
@@ -173,6 +194,7 @@ public class HttpIsoReader {
         ArchiveFormat archive_type = null;
         String extract_filename = null;
         String output_filename = null;
+        boolean list_archive_content = false;
         
         for (String arg : a) {
             String arg_lower = arg.toLowerCase();
@@ -194,6 +216,8 @@ public class HttpIsoReader {
                 archive_filename = arg.substring(3);
             } else if (arg_lower.startsWith("/e=") || arg_lower.startsWith("-e=")) {
                 extract_filename = arg.substring(3);
+            } else if (arg_lower.equals("/l") || arg_lower.equals("-l")) {
+                list_archive_content = true;
             } else if (arg_lower.startsWith("/o=") || arg_lower.startsWith("-o=")) {
                 output_filename = arg.substring(3);
             } else if (arg_lower.startsWith("/v") || arg_lower.startsWith("-v") || arg_lower.startsWith("--v")) {
@@ -202,7 +226,12 @@ public class HttpIsoReader {
             }
         }
 
-        if (archive_type == null || archive_filename == null || extract_filename == null || output_filename == null) {
+        if (archive_type == null || archive_filename == null) {
+            usage();
+            System.exit(1);
+        }
+        
+        if (list_archive_content == false && (extract_filename == null || output_filename == null)) {
             usage();
             System.exit(1);
         }
@@ -234,6 +263,11 @@ public class HttpIsoReader {
             System.exit(1);
         }
         
+        if (list_archive_content == true) {
+            /* List the content of the archive when -l or /l is specified. */
+            reader.listArchive();            
+            System.exit(0);
+        }
         
         if (System.getProperty("os.name").toLowerCase().indexOf("win") >= 0) {
             /**
