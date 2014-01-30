@@ -21,9 +21,19 @@ import net.sf.sevenzipjbinding.simple.ISimpleInArchiveItem;
 public class HttpIsoReader {
     ISevenZipInArchive archive;
     
+    private static final String RE7ZIP_VERSION = "1.2";
+    private static final String RE7ZIP_PROJECT_PAGE = "http://code.google.com/p/re7zip/";
+    private static final String RE7ZIP_DOWNLOAD_PAGE = "http://reboot.pro/files/file/224-re7zip/";
+    private static final String LIB_7ZIP_JBINDING_VERSION = "4.65-1.06rc-extr-only";
+    private static final String LIB_7ZIP_JBINDING_PROJECT_PAGE = "http://sevenzipjbind.sourceforge.net/";
+
     private static void version() {
-        System.out.println("\nre7zip version: 0.1");
-        System.out.println("Website: http://code.google.com/p/re7zip/\n");
+        System.out.println("\nre7zip version:               " + RE7ZIP_VERSION + "\n"
+                           + "re7zip project page:          " + RE7ZIP_PROJECT_PAGE + "\n"
+                           + "re7zip download page:         " + RE7ZIP_DOWNLOAD_PAGE + "\n\n"
+                           + "7-Zip-JBinding version:       " + LIB_7ZIP_JBINDING_VERSION + "\n"
+                           + "7-Zip-JBinding project page:  " + LIB_7ZIP_JBINDING_PROJECT_PAGE + "\n"
+        ) ;
     }
     
     private static void usage() {
@@ -264,7 +274,7 @@ public class HttpIsoReader {
         }
         
         if (list_archive_content == true) {
-            /* List the content of the archive when -l or /l is specified. */
+            /* List the content of the archive when "/l" or "-l" is specified. */
             reader.listArchive();            
             System.exit(0);
         }
