@@ -6,8 +6,8 @@ package readsevenzip;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import net.sf.sevenzipjbinding.IInStream;
 import net.sf.sevenzipjbinding.SevenZipException;
 
@@ -18,20 +18,22 @@ import net.sf.sevenzipjbinding.SevenZipException;
 public class HttpIInStream implements IInStream {
 
     URL url;
-    URLConnection conexion;
+    HttpURLConnection httpConnection;
     long length;
     InputStream stream;
     long position = 0;
 
     public HttpIInStream(String url) throws Exception {
         this.url = new URL(url);
-        conexion = this.url.openConnection();
-        length = Long.parseLong(conexion.getHeaderField("Content-Length"));
+        httpConnection = (HttpURLConnection) this.url.openConnection();
+        /* Do a HEAD request on the provided URL to get the size of the file. */
+        httpConnection.setRequestMethod("HEAD");
+        length = Long.parseLong(httpConnection.getHeaderField("Content-Length"));
     }
 
     private void positionStream(long pos) throws Exception {
 
-        if (position == pos) {
+        if (position == pos && pos != 0) {
             return;
         }
         if (stream != null) {
@@ -41,10 +43,11 @@ public class HttpIInStream implements IInStream {
         if (pos == length) {
             return;
         }
-        conexion = url.openConnection();
-        conexion.setRequestProperty("Range", "bytes=" + pos + "-");
-        conexion.connect();
-        stream = conexion.getInputStream();
+        httpConnection = (HttpURLConnection) url.openConnection();
+        httpConnection.setRequestMethod("GET");
+        httpConnection.setRequestProperty("Range", "bytes=" + pos + "-");
+        httpConnection.connect();
+        stream = httpConnection.getInputStream();
         position = pos;
     }
 
